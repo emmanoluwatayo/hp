@@ -1,5 +1,12 @@
 // ignore_for_file: prefer_collection_literals
 
+import 'dart:convert';
+
+LoginUser authResponseFromJson(String str) =>
+    LoginUser.fromJson(json.decode(str));
+
+String authResponseToJson(LoginUser data) => json.encode(data.toJson());
+
 class LoginUser {
   String? username;
   String? password;

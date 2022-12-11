@@ -1,32 +1,38 @@
-// ignore_for_file: prefer_const_constructors
+// ignore_for_file: prefer_const_constructors, avoid_print, non_constant_identifier_names, unused_local_variable
 
+import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter/material.dart';
+import 'package:test_project/data/controller/generic_state_notifier.dart';
 import 'package:test_project/features/main_navigation/main_navigation_screen.dart';
+import 'package:test_project/features/screens/login/view_model.dart';
 import 'package:test_project/features/screens/login/widgets/checkbox.dart';
+import 'package:test_project/features/screens/login/widgets/route_name.dart';
 import 'package:test_project/features/screens/login_number/login_num_screen.dart';
 import 'package:test_project/features/utils/app_colors.dart';
-import 'package:test_project/network/dio_client.dart';
-
+import 'package:test_project/models/login_request.dart';
+import 'package:test_project/navigator/navigator.dart';
+import '../../widgets/screenUtils/screen_utils.dart';
 import '../../widgets/widgets.dart';
+import 'widgets/icon_widget.dart';
 
-class SignupScreen extends StatefulWidget {
+class SignupScreen extends StatefulHookConsumerWidget {
   const SignupScreen({Key? key}) : super(key: key);
 
   @override
-  State<SignupScreen> createState() => _SignupScreenState();
+  _SignupScreenState createState() => _SignupScreenState();
 }
 
-class _SignupScreenState extends State<SignupScreen> {
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-
+class _SignupScreenState extends ConsumerState<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
-
-  final dioClient = DioClient();
+  bool hidePassword = true;
   var value = false;
+  late final RouteName routeName;
 
   @override
   Widget build(BuildContext context) {
+    final firstController = useTextEditingController();
+    final passWordController = useTextEditingController();
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
       body: SafeArea(
@@ -98,8 +104,17 @@ class _SignupScreenState extends State<SignupScreen> {
                         child: Padding(
                           padding: const EdgeInsets.only(left: 16),
                           child: TextFormInput2(
-                            controller: emailController,
-                            validator: (string) => null,
+                            controller: firstController,
+                            validator: (CurrentValue) {
+                              var nonNullValue = CurrentValue ?? '';
+                              if (nonNullValue.isEmpty) {
+                                return ("username is required");
+                              }
+                              if (!nonNullValue.contains("@")) {
+                                return ("username should contains @");
+                              }
+                              return null;
+                            },
                             obscureText: false,
                             labelText: "Email",
                           ),
@@ -134,12 +149,33 @@ class _SignupScreenState extends State<SignupScreen> {
                         child: Padding(
                           padding: const EdgeInsets.only(left: 16),
                           child: TextFormInput2(
-                              controller: passwordController,
-                              validator: (string) => null,
-                              obscureText: false,
-                              labelText: "password",
-                              suffixIcon:
-                                  Icon(Icons.visibility, color: Colors.grey)),
+                            controller: passWordController,
+                            validator: (PassCurrentValue) {
+                              RegExp regex = RegExp(
+                                  r'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[!@#\$&*~]).{8,}$');
+                              var passNonNullValue = PassCurrentValue ?? "";
+                              if (passNonNullValue.isEmpty) {
+                                return ("Password is required");
+                              } else if (passNonNullValue.length < 6) {
+                                return ("Password Must be more than 5 characters");
+                              }
+                              return null;
+                            },
+                            obscureText: hidePassword,
+                            labelText: "password",
+                            suffixIcon: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  hidePassword = !hidePassword;
+                                });
+                              },
+                              child: Icon(
+                                  hidePassword
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                  color: Colors.grey),
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -176,25 +212,62 @@ class _SignupScreenState extends State<SignupScreen> {
                     SizedBox(
                       height: 73,
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 24, right: 24),
-                      child: AuthButton(
-                        text: "Login",
-                        onPress: () async {
-                          // var loginUser = await dioClient.createUser(
-                          //     emailController.text, passwordController.text);
+                    HookConsumer(builder: ((context, ref, child) {
+                      final loginAccount = ref.watch(createAccountProvider);
 
-                          // print(loginUser);
+                      ref.listen<RequestState>(createAccountProvider,
+                          (prev, state) {
+                        if (state is Loading) {
+                          ScreenUtil.showLoadingView(context);
+                        } else {
+                          ScreenUtil.hideLoadingView(context);
+                        }
+                        if (state is Success) {
+                          context.navigate(MainNavigationScreen());
+                        }
+                        if (state is Error) {
+                          ScreenUtil.showErrorDialog(
+                              context, state.error.toString());
+                        }
+                      });
+                      return AuthButton(
+                        textColor: Colors.white,
+                        icon: loginAccount is Loading
+                            ? loadingIcon()
+                            : backIcon(),
+                        onPressed: loginAccount is Loading
+                            ? null
+                            : () async {
+                                if (firstController.text.isEmpty ||
+                                    passWordController.text.isEmpty) {
+                                  return;
+                                } else if (_formKey.currentState!.validate()) {
+                                  _formKey.currentState!.save();
 
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => MainNavigationScreen(),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
+                                  var loginUser = LoginRequest(
+                                      username: firstController.text,
+                                      password: passWordController.text);
+                                  ref
+                                      .read(createAccountProvider.notifier)
+                                      .createAccount(loginUser);
+
+                                  print(loginUser.toJson());
+                                  // Navigator.push(
+                                  //   context,
+                                  //   MaterialPageRoute(
+                                  //     builder: (context) => MainNavigationScreen(),
+                                  //   ),
+                                  // );
+
+                                  // ScaffoldMessenger.of(context)
+                                  //     .showSnackBar(SnackBar(
+                                  //   content: Text('${loginUser.toJson()}'),
+                                  //   duration: Duration(seconds: 2),
+                                  // ));
+                                }
+                              },
+                      );
+                    })),
                     SizedBox(
                       height: 14,
                     ),

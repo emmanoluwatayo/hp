@@ -1,6 +1,8 @@
 // ignore: constant_identifier_names
 import 'package:dio/dio.dart';
 
+const String token = '';
+
 class AuthorizationInterceptor extends Interceptor {
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:test_project/features/screens/home_screen/widgets/details_con.dart';
 import 'package:test_project/features/screens/home_screen/widgets/refer_con.dart';
 import 'package:test_project/features/utils/app_colors.dart';
@@ -6,14 +7,14 @@ import 'package:test_project/features/utils/app_image.dart';
 
 import 'widgets/currency_exchange.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends StatefulHookConsumerWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(

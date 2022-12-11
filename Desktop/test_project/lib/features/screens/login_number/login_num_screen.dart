@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 import 'package:test_project/features/main_navigation/main_navigation_screen.dart';
 import 'package:test_project/features/screens/login/login_screen.dart';
@@ -7,14 +8,14 @@ import 'package:test_project/features/screens/login/widgets/checkbox.dart';
 import '../../utils/app_colors.dart';
 import '../../widgets/widgets.dart';
 
-class SignUpNumber extends StatefulWidget {
+class SignUpNumber extends StatefulHookConsumerWidget {
   const SignUpNumber({Key? key}) : super(key: key);
 
   @override
-  State<SignUpNumber> createState() => _SignUpNumberState();
+  _SignUpNumberState createState() => _SignUpNumberState();
 }
 
-class _SignUpNumberState extends State<SignUpNumber> {
+class _SignUpNumberState extends ConsumerState<SignUpNumber> {
   final TextEditingController phoneNumberController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
@@ -192,20 +193,16 @@ class _SignUpNumberState extends State<SignUpNumber> {
                     const SizedBox(
                       height: 73,
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 24, right: 24),
-                      child: AuthButton(
-                        text: "Login",
-                        onPress: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  const MainNavigationScreen(),
-                            ),
-                          );
-                        },
-                      ),
+                    AuthButton(
+                      text: "Login",
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const MainNavigationScreen(),
+                          ),
+                        );
+                      },
                     ),
                     const SizedBox(
                       height: 14,

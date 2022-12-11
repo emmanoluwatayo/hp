@@ -2,10 +2,12 @@ class Endpoints {
   Endpoints._();
 
   static const String baseURL = 'https://core.development.4traderx.com';
+  static const authToken = "";
 
-  static const int receiveTimeout = 5000;
+  ///TIMEOUT
+  static const int receiveTimeout = 100000;
+  static const int connectionTimeout = 100000;
 
-  static const int connectionTimeout = 3000;
-
+  ///USER AUTH/ACCOUNT
   static const String users = '/login';
 }
